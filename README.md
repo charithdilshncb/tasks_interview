@@ -11,3 +11,6 @@
 - Install dependencies: npm install
 - Start this application: npm start
         
+## Usage
+
+- Published API Doc: https://documenter.getpostman.com/view/6575835/TzCMdoMu
