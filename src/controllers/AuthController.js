@@ -32,38 +32,32 @@ const signup = (req, res, next) => {
 }
 
 const signupwithpromo = (req, res, next) => {
-    const { username, password, promoCode } = req.body;
+    const { username, password, promocode } = req.body;
 
+    let promoId;
     UserModel.findOne({ username })
         .then(doc => {
             if (doc) throw Error('Username Already Exists');
+            return PromoCodeModel.findOne({ promocode, used: false })
         })
-        .then(() => PromoCodeModel.findOne({ promocode: promoCode, used: false }))
         .then(doc => {
             if (!doc) throw Error('Invalid PromoCode');
-            return doc._id;
+            promoId = doc._id;
         })
-        .then((id) => {
-            bcrypt.hash(password, 10, (err, hashhedpass) => {
-                if (err) throw err;
-                let user = new UserModel({
-                    username: username,
-                    password: hashhedpass,
-                    points: 10
-                })
-                user.save()
-        .then(() => {
-            PromoCodeModel.findOneAndUpdate({ _id: id }, { used: true }, { upsert: true }, function (err, doc) {
-                if (err) throw err;
-                return res.json({
-                    message: 'user added succesfully!'
-                })
-            });
+        .then(() =>  bcrypt.hash(password, 10))
+        .then(hashhedpass => {
+            let user = new UserModel({
+                username: username,
+                password: hashhedpass,
+                points: 10
+            })
+           return user.save()
         })
-        .catch(err => {
-             throw err;
-                })
-            });
+        .then(() => PromoCodeModel.findOneAndUpdate({ _id: promoId }, { used: true }, { upsert: true }))
+        .then(() =>{
+            return res.json({
+                message: 'user added succesfully!'
+            })
         })
         .catch(err => {
             res.status(400).json({
